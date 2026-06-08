@@ -1,0 +1,22 @@
+Package: OmopNsaidGiBleedStudy
+Type: Package
+Title: Comparative New-User Cohort Study of NSAID Gastrointestinal Safety in the OMOP CDM
+Version: 0.1.0
+Author: Agniva Das
+Maintainer: Agniva Das <agniva.d-statphd@msubaroda.ac.in>
+Description: A reproducible OHDSI-framework real-world evidence study estimating the
+    comparative risk of gastrointestinal haemorrhage among new users of selective versus
+    non-selective NSAIDs, using propensity-score adjustment and empirical calibration on
+    OMOP-CDM data (Eunomia). Methodological demonstration on public synthetic data.
+License: Apache License 2.0
+Encoding: UTF-8
+Depends:
+    R (>= 4.2.0)
+Imports:
+    DatabaseConnector,
+    SqlRender,
+    Eunomia,
+    CohortGenerator,
+    FeatureExtraction,
+    CohortMethod,
+    EmpiricalCalibration

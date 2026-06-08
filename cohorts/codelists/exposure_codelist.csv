@@ -1,0 +1,6 @@
+cohort,concept_name,vocabulary_id,domain_id,standard_concept,include_descendants,source_codes_mapped
+target,celecoxib,RxNorm,Drug,S,TRUE,"NDC, RxNorm"
+comparator,diclofenac,RxNorm,Drug,S,TRUE,"NDC, RxNorm"
+comparator,ibuprofen,RxNorm,Drug,S,TRUE,"NDC, RxNorm"
+comparator,naproxen,RxNorm,Drug,S,TRUE,"NDC, RxNorm"
+outcome,Gastrointestinal hemorrhage,SNOMED,Condition,S,TRUE,"ICD-9 578.x, ICD-10 K92.x"
