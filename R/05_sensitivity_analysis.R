@@ -41,22 +41,38 @@ get_negative_control_estimates <- function(cdm, nc_ids, target_id, comparator_id
   results <- lapply(nc_ids, function(nc_id) {
     tryCatch({
       study_pop <- CohortMethod::createStudyPopulation(
-        cohortMethodData              = cm_data,
-        outcomeId                     = nc_id,
-        removeSubjectsWithPriorOutcome = TRUE,
-        riskWindowStart               = 1,
-        riskWindowEnd                 = 0,
-        addExposureDaysToEnd          = TRUE
-      )
-      ps <- CohortMethod::createPs(cohortMethodData = cm_data, population = study_pop)
-      matched_nc <- CohortMethod::matchOnPs(ps, caliper = 0.2,
-                                            caliperScale = "standardized logit")
-      model_nc <- CohortMethod::fitOutcomeModel(
-        population       = matched_nc,
         cohortMethodData = cm_data,
-        modelType        = "cox"
+        outcomeId        = nc_id,
+        createStudyPopulationArgs = CohortMethod:::createCreateStudyPopulationArgs(
+          removeSubjectsWithPriorOutcome = TRUE,
+          riskWindowStart               = 1,
+          startAnchor                   = "cohort start",
+          riskWindowEnd                 = 0,
+          endAnchor                     = "cohort end"
+        )
       )
-      stats <- CohortMethod::getOutcomeModelStatistics(model_nc)
+      ps <- CohortMethod::createPs(
+        cohortMethodData = cm_data,
+        population       = study_pop,
+        createPsArgs     = CohortMethod:::createCreatePsArgs()
+      )
+      matched_nc <- CohortMethod::matchOnPs(
+        population    = ps,
+        matchOnPsArgs = CohortMethod::createMatchOnPsArgs(
+          caliper = 0.2, caliperScale = "standardized logit"
+        )
+      )
+      model_nc <- CohortMethod::fitOutcomeModel(
+        population          = matched_nc,
+        cohortMethodData    = cm_data,
+        fitOutcomeModelArgs = CohortMethod::createFitOutcomeModelArgs(modelType = "cox")
+      )
+      if (model_nc$outcomeModelStatus != "OK") {
+        log_step(sprintf("  NC %d: no outcomes in matched population, skipping", nc_id))
+        return(NULL)
+      }
+      stats <- model_nc$outcomeModelTreatmentEstimate
+      if (is.null(stats) || nrow(stats) == 0) return(NULL)
       data.frame(outcomeId = nc_id, logRr = stats$logRr, seLogRr = stats$seLogRr)
     }, error = function(e) {
       log_step(sprintf("  Skipping NC %d: %s", nc_id, conditionMessage(e)))
@@ -99,9 +115,13 @@ calibrate_estimate <- function(primary_logrr, primary_se, nc_estimates) {
 }
 
 #' Compute the E-value for the point estimate and the confidence limit nearer the null.
+#' For HR < 1, the formula is applied to 1/HR (symmetry around the null).
 compute_evalue <- function(hr, lcl, ucl) {
   log_step("Computing E-values for unmeasured confounding")
-  evalue <- function(x) x + sqrt(x * (x - 1))
+  evalue <- function(x) {
+    x <- ifelse(x < 1, 1 / x, x)
+    x + sqrt(x * (x - 1))
+  }
   limit  <- if (hr > 1) lcl else ucl
   result <- data.frame(hr = hr, lcl = lcl, ucl = ucl,
                        evalue_point = evalue(hr),

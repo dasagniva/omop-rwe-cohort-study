@@ -191,15 +191,16 @@ generate_cohorts <- function(cdm, target_ids, comparator_ids, outcome_ids) {
     cdm$schemas$cohort_database_schema, cdm$schemas$cohort_table
   )
   counts <- DatabaseConnector::querySql(cdm$connection, counts_sql)
+  cohort_labels <- c("1" = "Target (celecoxib)",
+                     "2" = "Comparator (non-selective NSAIDs)",
+                     "3" = "Outcome (GI haemorrhage)")
   log_step("Cohort sizes:")
   for (i in seq_len(nrow(counts))) {
-    label <- switch(as.character(counts$COHORT_DEFINITION_ID[i]),
-                    "1" = "Target (celecoxib)",
-                    "2" = "Comparator (non-selective NSAIDs)",
-                    "3" = "Outcome (GI haemorrhage)",
-                    "Unknown")
-    log_step(sprintf("  Cohort %d — %s: %d rows",
-                     counts$COHORT_DEFINITION_ID[i], label, counts$N[i]))
+    id    <- counts[[1]][i]
+    n_row <- counts[[2]][i]
+    label <- cohort_labels[as.character(id)]
+    if (is.na(label)) label <- "Unknown"
+    log_step(sprintf("  Cohort %d - %s: %d rows", id, label, n_row))
   }
 
   invisible(cohort_table_names)

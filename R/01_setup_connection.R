@@ -23,19 +23,26 @@
 
 suppressPackageStartupMessages({
   library(DatabaseConnector)
-  library(Eunomia)
 })
 
 source(file.path("R", "utils.R"))
 
-#' Connect to the Eunomia OMOP CDM.
+#' Connect to the GiBleed OMOP CDM (SQLite, bundled from Eunomia v1.0.3).
 #'
 #' Returns a list with the open connection, connectionDetails, and the schema
 #' names used throughout the study. The clinical tables and the OMOP standard
-#' vocabularies both live in the 'main' schema in Eunomia.
+#' vocabularies both live in the 'main' schema in SQLite.
 connect_cdm <- function() {
-  log_step("Resolving Eunomia connection details (downloads on first run)")
-  connection_details <- Eunomia::getEunomiaConnectionDetails()
+  db_path <- path.expand("~/eunomia_data/cdm.sqlite")
+  if (!file.exists(db_path)) {
+    stop("GiBleed SQLite database not found at: ", db_path,
+         "\nRun extras/install_packages.R to set up the database.")
+  }
+  log_step(sprintf("Connecting to GiBleed SQLite CDM (%s)", db_path))
+  connection_details <- DatabaseConnector::createConnectionDetails(
+    dbms   = "sqlite",
+    server = db_path
+  )
 
   log_step("Opening connection to the OMOP CDM")
   connection <- DatabaseConnector::connect(connection_details)
@@ -49,7 +56,7 @@ connect_cdm <- function() {
   # Quick sanity check: how many persons are in the CDM?
   n_person <- DatabaseConnector::querySql(
     connection, "SELECT COUNT(*) AS n FROM main.person;"
-  )$N
+  )[[1]][1]
   log_step(sprintf("Connected. CDM contains %s persons.", format(n_person, big.mark = ",")))
 
   list(

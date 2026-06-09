@@ -148,7 +148,7 @@ written to `output/`. A captured session for exact reproducibility is written to
 
 **Agniva Das**, Ph.D. (Statistics)
 Quantitative researcher — observational health data, causal inference, and applied biostatistics.
-[ORCID: [0000-0002-5536-371X](https://orcid.org/my-orcid?orcid=0000-0002-5536-371X)] · [LinkedIn: [linkedin.com/das-agniva](https://www.linkedin.com/in/das-agniva/)]
+[Google Scholar] · [ORCID: 0000-0002-5536-371X] · [LinkedIn]
 
 *This repository is an independent methodological demonstration on public synthetic data. It does
 not use or expose any real patient data.*
